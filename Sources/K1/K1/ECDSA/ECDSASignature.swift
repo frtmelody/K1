@@ -13,6 +13,7 @@ public struct ECDSASignature: ContiguousBytes, Equatable, ECSignature {
     public init<D: DataProtocol>(rawRepresentation: D) throws {
         guard
             rawRepresentation.count == 2 * K1.Curve.Field.byteCount
+            || rawRepresentation.count == 2 * K1.Curve.Field.byteCount+1
         else {
             throw K1.Error.incorrectByteCountOfRawSignature
         }

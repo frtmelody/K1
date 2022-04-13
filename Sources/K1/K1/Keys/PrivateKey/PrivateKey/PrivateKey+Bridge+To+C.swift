@@ -33,12 +33,12 @@ extension Bridge {
             nonceFunctionArbitraryBytes = [UInt8](nonceFunctionArbitraryData)
         }
                 
-        var signatureBridgedToC = secp256k1_ecdsa_signature()
+        var signatureBridgedToC = secp256k1_ecdsa_recoverable_signature()
         
         try Self.call(
             ifFailThrow: .failedToECDSASignDigest
         ) { context in
-            secp256k1_ecdsa_sign(
+            secp256k1_ecdsa_sign_recoverable(
                 context,
                 &signatureBridgedToC,
                 message,
@@ -47,10 +47,22 @@ extension Bridge {
                 nonceFunctionArbitraryBytes
             )
         }
-
+        var recid : Int32 = 0
+        var sigData :Array<UInt8> = Array(repeating: 0, count: 65)
+        try Self.call(
+            ifFailThrow: .failedToECDSASignDigest
+        ) { context in
+            secp256k1_ecdsa_recoverable_signature_serialize_compact(
+                context,
+                &sigData,
+                &recid,
+                &signatureBridgedToC
+            )
+        }
+        sigData[64] = UInt8(recid)
         return Data(
-            bytes: &signatureBridgedToC.data,
-            count: MemoryLayout.size(ofValue: signatureBridgedToC.data)
+            bytes: sigData,
+            count: 65
         )
     }
     
